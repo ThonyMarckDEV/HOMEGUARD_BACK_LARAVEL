@@ -23,11 +23,16 @@ use App\Http\Controllers\AuthController;
 
         Route::post('/send-message', [AuthController::class, 'sendContactEmail']);
 
-        Route::post('/send-verification-codeUser', [AuthController::class, 'sendVerificationCodeUser']);
+        Route::post('/mandarLinkStreamESP32', [AdminController::class, 'obtenerLinkdelESP32']);
 
-        Route::post('/verify-codeUser', [AuthController::class, 'verifyCodeUser']);
-        
-        Route::post('/change-passwordUser', [AuthController::class, 'changePasswordUser']);
+        Route::post('/store-log', [AdminController::class, 'storeLog']);
+
+        Route::get('/getLedStates', [AdminController::class, 'getLedStates']);
+
+        Route::post('/updateLedState/{id}', [AdminController::class, 'updateLedState']); // Actualizar el estado de un LED
+
+        Route::get('vigilance/status', [AdminController::class, 'getVigilanceStatus']);  // Obtener estado de vigilancia
+
 
 //================================================================================================
 
@@ -36,7 +41,10 @@ use App\Http\Controllers\AuthController;
     //RUTAS PROTEGIDAS A
     // RUTAS PARA ADMINISTRADOR VALIDADA POR MIDDLEWARE AUTH (PARA TOKEN JWT) Y CHECKROLE (PARA VALIDAR ROL DEL TOKEN)
     Route::middleware(['auth.jwt', 'checkRoleMW:admin'])->group(function () { 
+
+        Route::get('/obtenerLinkStreamESP32Laravel', [AdminController::class, 'obtenerLinkStreamESP32Laravel']);
        
+        Route::post('vigilance/toggle', [AdminController::class, 'updateVigilanceStatus']); // Actualizar estado de vigilancia
     });
 
 
