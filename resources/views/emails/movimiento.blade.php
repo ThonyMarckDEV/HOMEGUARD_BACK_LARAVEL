@@ -1,13 +1,15 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reporte de Movimiento</title>
 </head>
 <body>
-    <h1>Se ha registrado movimiento</h1>
-    <p>Información del movimiento:</p>
-    <p>Fecha: {{ $fecha }}</p>
-    <p>Hora: {{ $hora }}</p>
-    <p><img src="{{ asset('img/alerta.jpg') }}" alt="Decoración" style="display: block; margin: 0 auto;"></p>
+    <h2>Alerta de Movimiento Detectado</h2>
+    <p>Se ha detectado un movimiento en el sistema de vigilancia:</p>
+    <p><strong>Fecha:</strong> {{ $fecha }}</p>
+    <p><strong>Hora:</strong> {{ $hora }}</p>
+    <p>Por favor, verifica el sistema de seguridad para obtener más detalles.</p>
 </body>
 </html>

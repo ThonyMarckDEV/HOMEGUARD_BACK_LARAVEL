@@ -9,6 +9,7 @@ class Imagen extends Model
 {
     use HasFactory;
     
+    protected $table = 'imagenes';  // Asegúrate de que coincida con el nombre de la tabla
 
     // Desactivar el manejo automático de created_at y updated_at
     public $timestamps = false;

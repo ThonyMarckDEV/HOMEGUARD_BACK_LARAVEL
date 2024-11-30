@@ -170,29 +170,46 @@ class AdminController extends Controller
      */
     public function uploadImage(Request $request)
     {
-        // Verificar si se recibe una imagen en el request
-        if ($request->hasFile('image')) {
-            // Obtener los datos de la imagen
-            $image = $request->file('image');
+        // Leer los datos binarios desde php://input
+        $imageData = file_get_contents('php://input');
 
+        if ($imageData) {
             // Crear un nombre único para la imagen
-            $imageName = Str::uuid() . '.jpg';
+            $imageName = uniqid() . '.jpg';
 
-            // Guardar la imagen en el directorio 'uploads'
-            $imagePath = $image->storeAs('uploads', $imageName, 'public');
+            // Definir la ruta donde se guardará la imagen
+            $uploadDir = public_path('uploads/');
+            $imagePath = $uploadDir . $imageName;
 
-            // Registrar la ruta de la imagen en la base de datos
-            $imagen = new Imagen();
-            $imagen->ruta_imagen = $imagePath;
-            $imagen->save();
+            // Asegurar que el directorio de subida exista
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true); // Crear la carpeta con permisos seguros
+            }
 
+            // Guardar la imagen en el servidor
+            if (file_put_contents($imagePath, $imageData)) {
+                // Registrar la ruta y la fecha en la base de datos
+                $imageUrl = '/uploads/' . $imageName;
+
+                $imagen = new Imagen();
+                $imagen->ruta_imagen = $imageUrl;  // Ruta de la imagen
+                $imagen->fecha = now();  // Fecha actual
+                $imagen->save();
+
+                return response()->json([
+                    'message' => 'Imagen guardada correctamente.',
+                    'image_path' => $imageUrl
+                ], 200);
+            } else {
+                return response()->json([
+                    'message' => 'Error al guardar la imagen.'
+                ], 500);
+            }
+        } else {
             return response()->json([
-                'message' => 'Imagen guardada correctamente.',
-                'image_path' => $imagePath
-            ]);
+                'message' => 'No se recibió ninguna imagen.'
+            ], 400);
         }
-
-        return response()->json(['message' => 'No se recibió ninguna imagen.'], 400);
     }
 
      // Guardar movimiento y enviar correo a todos los usuarios
@@ -517,6 +534,20 @@ class AdminController extends Controller
             $schedule->save();
         
             return response()->json(['message' => 'Programación eliminada exitosamente.'], 200);
+        }
+
+        public function getImagenes()
+        {
+            // Obtener todas las imágenes ordenadas por fecha descendente
+            $imagenes = Imagen::orderBy('fecha', 'desc')->get(['idImagen', 'ruta_imagen', 'fecha']);
+            
+            // Asegurarse de que las rutas sean completas, concatenando la URL base
+            $imagenes = $imagenes->map(function ($imagen) {
+                $imagen->ruta_imagen ;
+                return $imagen;
+            });
+
+            return response()->json($imagenes);
         }
 
 }

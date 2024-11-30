@@ -37,6 +37,9 @@ use App\Http\Controllers\AuthController;
 
         Route::post('/reportarMovimiento', [AdminController::class, 'reportarMovimiento']);
 
+        // Ruta para obtener todas las imágenes
+        Route::get('/reportes-imagenes', [AdminController::class, 'getImagenes']);
+
 //================================================================================================
 
 

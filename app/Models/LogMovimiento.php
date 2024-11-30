@@ -9,6 +9,11 @@ class LogMovimiento extends Model
 {
     use HasFactory;
 
+    protected $table = 'logmovimiento';  // Asegúrate de que coincida con el nombre de la tabla
+
+    protected $primaryKey = 'idReporte';  // Definir la clave primaria personalizada
+
+
     // Definir los campos que pueden ser asignados masivamente
     protected $fillable = ['Hora', 'Fecha', 'imagen'];
 
