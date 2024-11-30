@@ -18,10 +18,10 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
 
-class AdminController extends Controller
+class FamiliarController extends Controller
 {
     // Función para recibir y guardar el enlace
-    public function obtenerLinkdelESP32(Request $request)
+    public function obtenerLinkdelESP32Familiar(Request $request)
     {
         // Verificar que el enlace esté presente
         $request->validate([
@@ -40,7 +40,7 @@ class AdminController extends Controller
         ]);
     }
 
-    public function obtenerLinkStreamESP32Laravel()
+    public function obtenerLinkStreamESP32LaravelFamiliar()
     {
         // Ruta del archivo donde se guardó el enlace
         $file = 'stream_link.txt';
@@ -64,7 +64,7 @@ class AdminController extends Controller
 
 
      // Función para recibir y guardar los logs
-     public function storeLog(Request $request)
+     public function storeLogFamiliar(Request $request)
      {
          // Validar que el 'log' esté presente en la solicitud
          $request->validate([
@@ -91,7 +91,7 @@ class AdminController extends Controller
      }
 
      // Obtener los estados de los LEDs
-     public function getLedStates()
+     public function getLedStatesFamiliar()
      {
          // Obtener el estado de los LEDs con sus ids
          $leds = Led::all();
@@ -105,7 +105,7 @@ class AdminController extends Controller
      }
 
       // Cambiar el estado de un LED
-    public function updateLedState(Request $request, $id)
+    public function updateLedStateFamiliar(Request $request, $id)
     {
         // Validar el estado (debe ser 0 o 1)
         $request->validate([
@@ -122,7 +122,7 @@ class AdminController extends Controller
         return response()->json(['message' => 'Estado del LED actualizado correctamente']);
     }
 
-    public function getVigilanceStatus()
+    public function getVigilanceStatusFamiliar()
     {
         $vigilance = Vigilancia::first();  // Asumimos que solo hay un registro de vigilancia
     
@@ -142,7 +142,7 @@ class AdminController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function updateVigilanceStatus(Request $request)
+    public function updateVigilanceStatusFamiliar(Request $request)
     {
         $request->validate([
             'is_active' => 'required|boolean',
@@ -168,7 +168,7 @@ class AdminController extends Controller
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Response
      */
-    public function uploadImage(Request $request)
+    public function uploadImageFamiliar(Request $request)
     {
         // Verificar si se recibe una imagen en el request
         if ($request->hasFile('image')) {
@@ -196,7 +196,7 @@ class AdminController extends Controller
     }
 
      // Guardar movimiento y enviar correo a todos los usuarios
-     public function reportarMovimiento(Request $request)
+     public function reportarMovimientoFamiliar(Request $request)
      {
          // Obtener la hora y la fecha actual
          $hora_actual = now()->format('H:i:s');
@@ -226,7 +226,7 @@ class AdminController extends Controller
 
 
      // En EstudianteController.php
-    public function perfilUsuario()
+    public function perfilUsuarioFamiliar()
     {
         $usuario = Auth::user();
         $profileUrl = $usuario->perfil ? url("{$usuario->perfil}") : null;
@@ -250,7 +250,7 @@ class AdminController extends Controller
             ]
         ]);
     }
-    public function uploadProfileImageUsuario(Request $request, $idUsuario)
+    public function uploadProfileImageUsuarioFamiliar(Request $request, $idUsuario)
     {
         $admin = Usuario::find($idUsuario);
         if (!$admin) {
@@ -286,7 +286,7 @@ class AdminController extends Controller
         return response()->json(['success' => false, 'message' => 'No se cargó la imagen'], 400);
     }
 
-    public function updateUsuario(Request $request, $idUsuario)
+    public function updateUsuarioFamiliar(Request $request, $idUsuario)
     {
         try {
             // Buscar el usuario por su ID
@@ -341,88 +341,8 @@ class AdminController extends Controller
         }
     }
 
-    public function registrarUsuarioAdmin(Request $request)
-    {
-        $messages = [
-            'username.required' => 'El nombre de usuario es obligatorio.',
-            'username.unique' => 'El nombre de usuario ya está en uso.',
-            'nombres.required' => 'El nombre es obligatorio.',
-            'apellidos.required' => 'Los apellidos son obligatorios.',
-            'apellidos.regex' => 'Debe ingresar al menos dos apellidos separados por un espacio.',
-            'correo.required' => 'El correo es obligatorio.',
-            'correo.email' => 'El correo debe tener un formato válido.',
-            'correo.unique' => 'El correo ya está registrado.',
-            'edad.integer' => 'La edad debe ser un número entero.',
-            'edad.between' => 'La edad debe ser mayor a 18.',
-            'dni.digits' => 'El DNI debe tener exactamente 8 dígitos.',
-            'dni.required' => 'El DNI es obligatorio.',
-            'password.required' => 'La contraseña es obligatoria.',
-            'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
-            'password.regex' => 'La contraseña debe incluir al menos una mayúscula y un símbolo.',
-            'password.confirmed' => 'Las contraseñas no coinciden.',
-        ];
-        
-        // Validar datos de entrada
-        $validator = Validator::make($request->all(), [
-            'username' => 'required|unique:usuarios|max:255',
-            'nombres' => 'required|max:255',
-            'apellidos' => 'required|regex:/^[a-zA-Z]+(?: [a-zA-Z]+){1,}$/',
-            'password' => [
-                'required',
-                'confirmed',
-                'min:8',
-                'regex:/[A-Z]/', // Al menos una mayúscula
-                'regex:/[\W_]/', // Al menos un símbolo (caracter no alfanumérico)
-            ],
-            'dni' => 'required|digits:8', // Exactamente 8 dígitos
-            'correo' => 'required|email|max:255',
-        ], $messages);
 
-        // Si la validación falla, devolver los errores en formato JSON
-        if ($validator->fails()) {
-            return response()->json([
-                'errors' => $validator->errors(),
-            ], 422); // Código de estado 422 para errores de validación
-        }
-
-        try {
-            // Asignar valores predeterminados para campos opcionales
-            $rol = $request->rol ?? 'familiar'; // Valor predeterminado 'familiar'
-            $status = $request->status ?? 'loggedOff'; // Valor predeterminado 'loggedOff'
-            $perfil = $request->perfil ?? null; // Si no se proporciona, será null
-        
-            // Crear usuario con contraseña hasheada y valores predeterminados
-            $user = Usuario::create([
-                'username' => $request->username,
-                'nombres' => $request->nombres,
-                'apellidos' => $request->apellidos,
-                'dni' => $request->dni,
-                'correo' => $request->correo,
-                'edad' => $request->edad ?? null,
-                'nacimiento' => $request->nacimiento ?? null,
-                'sexo' => $request->sexo ?? null,
-                'direccion' => $request->direccion ?? null,
-                'telefono' => $request->telefono ?? null,
-                'departamento' => $request->departamento ?? null,
-                'password' => Hash::make($request->password),
-                'status' => $status,
-                'rol' => $rol,
-                'perfil' => $perfil,
-            ]);
-
-            return response()->json([
-                'message' => 'Usuario creado con éxito',
-            ], 201);
-            
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Hubo un problema al crear el usuario.',
-                'details' => $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    public function getSchedules()
+    public function getSchedulesFamiliar()
     {
         // Obtener todas las programaciones de luces donde hora_encendido y hora_apagado no son null
         $schedules = led::whereNotNull('hora_encendido')
@@ -445,7 +365,7 @@ class AdminController extends Controller
     }
 
     
-    public function scheduleLights(Request $request)
+    public function scheduleLightsFamiliar(Request $request)
     {
         try {
             // Validación previa para asegurarse de que los valores estén en el formato correcto
@@ -500,7 +420,7 @@ class AdminController extends Controller
 
 
       // Eliminar solo la programación de las luces (no el LED completo)
-        public function deleteSchedule($id)
+        public function deleteScheduleFamiliar($id)
         {
             // Buscar la programación del LED
             $schedule = Led::find($id);  

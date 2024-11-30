@@ -8,8 +8,6 @@ return [
 
     'allowed_methods' => ['*'],
 
-    //'allowed_origins' => ['http://localhost', 'http://127.0.0.1:8000','https://redfish-precise-mentally.ngrok-free.app'],
-
     'allowed_origins' => ['*'],
 
     'allowed_origins_patterns' => [],
