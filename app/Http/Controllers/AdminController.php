@@ -16,10 +16,71 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-
+use Symfony\Component\Process\Process;
 
 class AdminController extends Controller
 {
+
+    // public function obtenerLinkdelESP32(Request $request)
+    // {
+    //     // Validar que el enlace esté presente y sea una URL válida
+    //     $request->validate([
+    //         'link' => 'required|string|url',
+    //     ]);
+
+    //     $link = $request->input('link');
+
+    //     // Extraer la IP local del ESP32-CAM del enlace
+    //     $parsedUrl = parse_url($link);
+    //     if (!isset($parsedUrl['host'])) {
+    //         return response()->json(['error' => 'El enlace proporcionado no contiene una IP válida.'], 400);
+    //     }
+
+    //     $ipLocal = $parsedUrl['host'];
+
+    //     // Detener cualquier túnel activo antes de iniciar uno nuevo
+    //   //  $this->detenerTunnel();
+
+    //      // Comando para iniciar Cloudflare Tunnel usando la ruta completa
+    //     $command = "\"C:\\cloudflared.exe\" tunnel --url http://{$ipLocal}:8080 --no-autoupdate > \"C:\\cloudflared.log\" 2>&1 &";
+    //     exec($command);
+
+    //     // Esperar para que Cloudflare genere el enlace público
+    //     sleep(2);
+
+    //     // Leer el archivo de logs de Cloudflare para obtener la URL pública
+    //     $logFile = '/tmp/cloudflare.log';
+    //     $publicUrl = null;
+
+    //     if (file_exists($logFile)) {
+    //         $logContent = file_get_contents($logFile);
+    //         preg_match('/https:\/\/[a-z0-9\-]+\.trycloudflare\.com/', $logContent, $matches);
+    //         if (isset($matches[0])) {
+    //             $publicUrl = $matches[0];
+    //         }
+    //     }
+
+    //     if (!$publicUrl) {
+    //         return response()->json(['error' => 'No se pudo generar el enlace público.'], 500);
+    //     }
+
+    //     // Guardar el enlace público en un archivo
+    //     $file = 'stream_link.txt';
+    //     Storage::disk('local')->put($file, $publicUrl);
+
+    //     // Responder con éxito
+    //     return response()->json([
+    //         'message' => "Enlace público generado y guardado con éxito.",
+    //         'url_publica' => $publicUrl
+    //     ]);
+    // }
+
+    // private function detenerTunnel()
+    // {
+    //     // Detener cualquier proceso de Cloudflare Tunnel activo
+    //     exec("pkill -f 'cloudflared tunnel'");
+    // }
+
     // Función para recibir y guardar el enlace
     public function obtenerLinkdelESP32(Request $request)
     {
