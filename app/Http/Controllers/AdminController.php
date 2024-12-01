@@ -17,71 +17,13 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\Process\Process;
+use Carbon\Carbon;
+use DateTime;  // Importar la clase DateTime globalmente
 
 class AdminController extends Controller
 {
 
-    // public function obtenerLinkdelESP32(Request $request)
-    // {
-    //     // Validar que el enlace esté presente y sea una URL válida
-    //     $request->validate([
-    //         'link' => 'required|string|url',
-    //     ]);
-
-    //     $link = $request->input('link');
-
-    //     // Extraer la IP local del ESP32-CAM del enlace
-    //     $parsedUrl = parse_url($link);
-    //     if (!isset($parsedUrl['host'])) {
-    //         return response()->json(['error' => 'El enlace proporcionado no contiene una IP válida.'], 400);
-    //     }
-
-    //     $ipLocal = $parsedUrl['host'];
-
-    //     // Detener cualquier túnel activo antes de iniciar uno nuevo
-    //   //  $this->detenerTunnel();
-
-    //      // Comando para iniciar Cloudflare Tunnel usando la ruta completa
-    //     $command = "\"C:\\cloudflared.exe\" tunnel --url http://{$ipLocal}:8080 --no-autoupdate > \"C:\\cloudflared.log\" 2>&1 &";
-    //     exec($command);
-
-    //     // Esperar para que Cloudflare genere el enlace público
-    //     sleep(2);
-
-    //     // Leer el archivo de logs de Cloudflare para obtener la URL pública
-    //     $logFile = '/tmp/cloudflare.log';
-    //     $publicUrl = null;
-
-    //     if (file_exists($logFile)) {
-    //         $logContent = file_get_contents($logFile);
-    //         preg_match('/https:\/\/[a-z0-9\-]+\.trycloudflare\.com/', $logContent, $matches);
-    //         if (isset($matches[0])) {
-    //             $publicUrl = $matches[0];
-    //         }
-    //     }
-
-    //     if (!$publicUrl) {
-    //         return response()->json(['error' => 'No se pudo generar el enlace público.'], 500);
-    //     }
-
-    //     // Guardar el enlace público en un archivo
-    //     $file = 'stream_link.txt';
-    //     Storage::disk('local')->put($file, $publicUrl);
-
-    //     // Responder con éxito
-    //     return response()->json([
-    //         'message' => "Enlace público generado y guardado con éxito.",
-    //         'url_publica' => $publicUrl
-    //     ]);
-    // }
-
-    // private function detenerTunnel()
-    // {
-    //     // Detener cualquier proceso de Cloudflare Tunnel activo
-    //     exec("pkill -f 'cloudflared tunnel'");
-    // }
-
-    // Función para recibir y guardar el enlace
+   // Función para recibir y guardar el enlace
     public function obtenerLinkdelESP32(Request $request)
     {
         // Verificar que el enlace esté presente
@@ -609,6 +551,91 @@ class AdminController extends Controller
             });
 
             return response()->json($imagenes);
+        }
+
+         // Listar usuarios con el rol 'familiar'
+        public function listarFamiliares()
+        {
+            $familiares = Usuario::where('rol', 'familiar')->get();
+
+            return response()->json($familiares);
+        }
+
+        // Eliminar un usuario
+        public function eliminarUsuario($id)
+        {
+            $usuario = Usuario::find($id);
+
+            if ($usuario) {
+                $usuario->delete();
+                return response()->json(['message' => 'Usuario eliminado exitosamente.']);
+            }
+
+            return response()->json(['message' => 'Usuario no encontrado.'], 404);
+        }
+        public function reportesPorMes()
+        {
+            $meses = range(1, 12);  // Creamos un arreglo con los meses del año (1-12)
+            $reportesPorMes = LogMovimiento::selectRaw('MONTH(fecha) as mes, COUNT(*) as cantidad')
+                                            ->groupBy('mes')
+                                            ->get()
+                                            ->keyBy('mes');  // Agrupamos por mes
+        
+            // Aseguramos que cada mes del año esté presente, incluso si no hay reportes
+            $result = array_map(function ($mes) use ($reportesPorMes) {
+                return [
+                    'mes' => $mes,
+                    'cantidad' => $reportesPorMes[$mes]->cantidad ?? 0, // Si no existe, es 0
+                ];
+            }, $meses);
+        
+            return response()->json($result);
+        }
+        
+        
+        // public function movimientosPorSemana($semana)
+        // {
+        //     // Obtener la fecha de inicio y fin de la semana
+        //     $startOfWeek = Carbon::now()->setISODate(Carbon::now()->year, $semana)->startOfWeek();
+        //     $endOfWeek = Carbon::now()->setISODate(Carbon::now()->year, $semana)->endOfWeek();
+    
+        //     // Filtrar los movimientos entre esas fechas y contar los registros
+        //     $movimientosCantidad = LogMovimiento::whereBetween('fecha', [$startOfWeek, $endOfWeek])->count();
+            
+        //     return response()->json(['cantidad' => $movimientosCantidad]);
+        // }
+
+        public function reportesPorDia($mes)
+        {
+            // Obtenemos el nombre del mes (Ejemplo: "Enero")
+            $nombreMes = DateTime::createFromFormat('!m', $mes)->format('F');
+
+            // Filtramos los movimientos del mes y agrupamos por día
+            $movimientosPorDia = LogMovimiento::whereMonth('fecha', $mes)
+                                            ->selectRaw('DAY(fecha) as dia, count(*) as cantidad')
+                                            ->groupBy('dia')
+                                            ->orderBy('dia')
+                                            ->get();
+
+            return response()->json([
+                'nombreMes' => $nombreMes,  // Nombre del mes
+                'reportes' => $movimientosPorDia  // Movimientos agrupados por día
+            ]);
+        }
+        
+        
+          // Obtener la cantidad de familiares
+        public function cantidadFamiliares()
+        {
+            $cantidad = Usuario::where('rol', 'familiar')->count();
+            return response()->json(['cantidad' => $cantidad]);
+        }
+
+         // Obtener cantidad de LEDs
+        public function cantidadLeds()
+        {
+            $cantidad = Led::count();
+            return response()->json(['cantidad' => $cantidad]);
         }
 
 }

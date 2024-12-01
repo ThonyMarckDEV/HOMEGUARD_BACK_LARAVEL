@@ -40,6 +40,19 @@ use App\Http\Controllers\AuthController;
         // Ruta para obtener todas las imágenes
         Route::get('/reportes-imagenes', [AdminController::class, 'getImagenes']);
 
+        // Reportes por mes
+        Route::get('/reportes/por-mes', [AdminController::class, 'reportesPorMes']);
+
+        // Reportes por semana
+        Route::get('/movimientos/semana/{semana}', [AdminController::class, 'movimientosPorSemana']);
+
+        // Reportes por día (con el nombre del mes)
+        Route::get('/reportes/por-dia/{mes}', [AdminController::class, 'reportesPorDia']);
+
+        Route::get('/familiares/cantidad', [AdminController::class, 'cantidadFamiliares']);
+
+        Route::get('/leds/cantidad', [AdminController::class, 'cantidadLeds']);
+
 //================================================================================================
 
 
@@ -65,6 +78,13 @@ use App\Http\Controllers\AuthController;
         Route::post('/led/schedule', [AdminController::class, 'scheduleLights']); // Programar luces
 
         Route::delete('/led/schedule/{id}', [AdminController::class, 'deleteSchedule']); // Eliminar programación
+
+        Route::get('usuarios/familiares', [AdminController::class, 'listarFamiliares']);
+
+        Route::delete('usuarios/eliminar/{id}', [AdminController    ::class, 'eliminarUsuario']);
+
+
+
     });
 
 
