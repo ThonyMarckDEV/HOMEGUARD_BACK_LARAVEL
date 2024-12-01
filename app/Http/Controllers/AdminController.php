@@ -19,9 +19,17 @@ use Illuminate\Support\Facades\Validator;
 use Symfony\Component\Process\Process;
 use Carbon\Carbon;
 use DateTime;  // Importar la clase DateTime globalmente
+use App\Services\TwilioService;  // Asegúrate de importar el servicio TwilioService
 
 class AdminController extends Controller
 {
+
+    protected $twilioService;
+
+    public function __construct(TwilioService $twilioService)
+    {
+        $this->twilioService = $twilioService;
+    }
 
    // Función para recibir y guardar el enlace
     public function obtenerLinkdelESP32(Request $request)
@@ -215,34 +223,68 @@ class AdminController extends Controller
         }
     }
 
-     // Guardar movimiento y enviar correo a todos los usuarios
-     public function reportarMovimiento(Request $request)
-     {
-         // Obtener la hora y la fecha actual
-         $hora_actual = now()->format('H:i:s');
-         $fecha_actual = now()->format('Y-m-d');
- 
-         // Insertar el reporte en la tabla logMovimiento
-         $logMovimiento = LogMovimiento::create([
-             'Hora' => $hora_actual,
-             'Fecha' => $fecha_actual,
-             'imagen' => null,  // Agregar la lógica para manejar las imágenes si es necesario
-         ]);
- 
-         // Obtener todos los correos de los usuarios
-         $usuarios = Usuario::all();
- 
-         // Enviar correo a todos los usuarios
-         try {
-             foreach ($usuarios as $usuario) {
-                 Mail::to($usuario->correo)->send(new MovimientoReportado($hora_actual, $fecha_actual));
-             }
- 
-             return response()->json(['message' => 'Reporte registrado y correos enviados a todos los usuarios con éxito.']);
-         } catch (\Exception $e) {
-             return response()->json(['message' => 'Error al enviar los correos: ' . $e->getMessage()], 500);
-         }
-     }
+    // Guardar movimiento y enviar correo a todos los usuarios
+    public function reportarMovimiento(Request $request)
+    {
+        // Obtener la hora y la fecha actual
+        $hora_actual = now()->format('H:i:s');
+        $fecha_actual = now()->format('Y-m-d');
+
+        // Insertar el reporte en la tabla logMovimiento
+        $logMovimiento = LogMovimiento::create([
+            'Hora' => $hora_actual,
+            'Fecha' => $fecha_actual,
+            'imagen' => null,  // Agregar la lógica para manejar las imágenes si es necesario
+        ]);
+
+        // Obtener todos los usuarios
+        $usuarios = Usuario::all();
+
+        // Enviar WhatsApp a todos los usuarios
+        try {
+            foreach ($usuarios as $usuario) {
+                $correo = $usuario->correo;
+                $telefono = $usuario->telefono;  // Asegúrate de que 'telefono' esté en tu modelo
+
+                // Verificar si el teléfono tiene el prefijo internacional (+51)
+                if (substr($telefono, 0, 1) !== '+') {
+                    $telefono = '+51' . $telefono;  // Concatenar el prefijo
+                }
+
+                // Enviar correo a cada usuario
+                Mail::to($correo)->send(new MovimientoReportado($hora_actual, $fecha_actual));
+
+                // Verificar si el número de teléfono es válido
+                if (!empty($telefono)) {
+                    // Enviar el mensaje de WhatsApp usando Twilio
+                    $this->twilioService->sendWhatsAppMessage($telefono, "
+                        🚨 **¡Alerta de Movimiento!** 🚨
+
+                        📅 *Fecha:* $fecha_actual
+                        ⏰ *Hora:* $hora_actual
+
+                        ¡Hola! Soy **HOMEGUARD**, el sistema de seguridad para hogares 🏡. 
+                        Se ha detectado un movimiento en tu área de seguridad. ¡No te preocupes! Nuestro equipo está al tanto de la situación 👮‍♂️.
+
+                        ✅ *Acción recomendada:*
+                        1. Revisa las cámaras 🛠️
+                        2. Verifica si hay algo sospechoso 🔍
+
+                        Si tienes alguna duda, ¡estamos aquí para ayudarte! 🙋‍♂️🙋‍♀️
+
+                        🛡️ *¡Tu hogar, nuestra prioridad!*
+                    ");
+                } else {
+                    // Si el teléfono está vacío o no es válido
+                    Log::error("Número de teléfono inválido para el usuario: $correo");
+                }
+            }
+
+            return response()->json(['message' => 'Reporte registrado, correos y mensajes de WhatsApp enviados a todos los usuarios con éxito.']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error al enviar los correos o mensajes de WhatsApp: ' . $e->getMessage()], 500);
+        }
+    }
 
 
      // En EstudianteController.php

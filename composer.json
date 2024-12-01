@@ -16,6 +16,7 @@
         "mercadopago/dx-php": "^3.0",
         "setasign/fpdf": "^1.8",
         "tecnickcom/tcpdf": "*",
+        "twilio/sdk": "*",
         "tymon/jwt-auth": "^2.1"
     },
     "require-dev": {
