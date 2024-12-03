@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Cache;
+use App\Http\Controllers\AuditoriaController;
 
 class AuthController extends Controller
 {
@@ -33,15 +34,16 @@ class AuthController extends Controller
         ];
     
         try {
-            // Buscar el usuario por username
-            $usuario = Usuario::where('username', $credentials['username'])->first();
+            // Buscar el ID del usuario por username
+            $idUsuario = Usuario::where('username', $credentials['username'])->pluck('idUsuario')->first();
     
             // Verificar si el usuario existe
-            if (!$usuario) {
+            if (!$idUsuario) {
                 return response()->json(['error' => 'Usuario no encontrado'], 404);
             }
     
             // Verificar si el usuario ya está logueado
+            $usuario = Usuario::find($idUsuario); // Obtener el usuario completo para verificar su estado
             if ($usuario->status === 'loggedOn') {
                 return response()->json(['message' => 'Usuario ya logueado'], 409);
             }
@@ -54,39 +56,40 @@ class AuthController extends Controller
             // Actualizar el estado del usuario a "loggedOn"
             $usuario->update(['status' => 'loggedOn']);
     
+            // Registrar la auditoría de inicio de sesión pasando el ID del usuario
+            AuditoriaController::auditoriaIniciarSesion($idUsuario);
+    
             return response()->json(compact('token'));
         } catch (JWTException $e) {
             return response()->json(['error' => 'No se pudo crear el token'], 500);
         }
     }
 
-
     /**
      * Logout del usuario y revocación del token JWT.
      */
     public function logout(Request $request)
     {
-        
+        // Validar que el idUsuario está presente
         $request->validate([
             'idUsuario' => 'required|integer',
         ]);
-    
-      
-        $user = Usuario::where('idUsuario', $request->idUsuario)->first();
-    
-        if ($user) {
-            try {
-                
-                $user->status = 'loggedOff';
-                $user->save();
-    
-                return response()->json(['success' => true, 'message' => 'Usuario deslogueado correctamente'], 200);
-            } catch (JWTException $e) {
-                return response()->json(['error' => 'No se pudo desloguear al usuario'], 500);
-            }
+
+        try {
+            // Actualizar el estado del usuario a "loggedOff" usando el idUsuario
+            $user = Usuario::findOrFail($request->idUsuario);  // Encuentra al usuario por su id
+
+            // Actualizar el estado del usuario a "loggedOff"
+            $user->status = 'loggedOff';
+            $user->save();
+
+            // Registrar la auditoría de cierre de sesión, pasando solo el idUsuario
+            AuditoriaController::auditoriaCerrarSesion($request->idUsuario);
+
+            return response()->json(['success' => true, 'message' => 'Usuario deslogueado correctamente'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'No se pudo desloguear al usuario', 'message' => $e->getMessage()], 500);
         }
-    
-        return response()->json(['success' => false, 'message' => 'No se pudo encontrar el usuario'], 404);
     }
 
     /**

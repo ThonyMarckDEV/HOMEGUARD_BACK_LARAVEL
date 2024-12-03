@@ -17,9 +17,11 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\Process\Process;
-use Carbon\Carbon;
 use DateTime;  // Importar la clase DateTime globalmente
 use App\Services\TwilioService;  // Asegúrate de importar el servicio TwilioService
+use Carbon\Carbon;
+use App\Models\Auditoria;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AdminController extends Controller
 {
@@ -116,9 +118,31 @@ class AdminController extends Controller
      }
 
       // Cambiar el estado de un LED
+    // public function updateLedState(Request $request, $id)
+    // {
+    //     // Validar el estado (debe ser 0 o 1)
+    //     $request->validate([
+    //         'state' => 'required|in:0,1'
+    //     ]);
+
+    //     // Buscar el LED por su id
+    //     $led = Led::findOrFail($id);
+
+    //     // Actualizar el estado del LED
+    //     $led->state = $request->input('state');
+    //     $led->save();
+
+    //     return response()->json(['message' => 'Estado del LED actualizado correctamente']);
+    // }
+
+    /**
+ * Actualiza el estado de un LED y registra la auditoría.
+ */
+ // Ejemplo de uso en el controlador de LEDs
+
     public function updateLedState(Request $request, $id)
     {
-        // Validar el estado (debe ser 0 o 1)
+        // Validar que el estado sea 0 o 1
         $request->validate([
             'state' => 'required|in:0,1'
         ]);
@@ -126,9 +150,16 @@ class AdminController extends Controller
         // Buscar el LED por su id
         $led = Led::findOrFail($id);
 
+        // Obtener el idUsuario del token JWT
+        $user = JWTAuth::parseToken()->authenticate();
+        $idUsuario = $user->idUsuario;  // Suponiendo que tu modelo de usuario tiene idUsuario
+
         // Actualizar el estado del LED
         $led->state = $request->input('state');
         $led->save();
+
+        // Registrar la auditoría de encendido o apagado del foco
+        AuditoriaController::auditoriaEstadoFoco($idUsuario, $id, $led->state);
 
         return response()->json(['message' => 'Estado del LED actualizado correctamente']);
     }
