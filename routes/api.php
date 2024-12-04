@@ -53,6 +53,12 @@ use App\Http\Controllers\AuthController;
 
         Route::get('/leds/cantidad', [AdminController::class, 'cantidadLeds']);
 
+        Route::get('usuarios/familiares/auditoria', [AdminController::class, 'listarFamiliaresAuditoria']);
+
+        Route::get('usuarios/familiares', [AdminController::class, 'listarFamiliares']);
+
+        Route::get('auditorias', [AdminController::class, 'listarAuditoria']);
+
 //================================================================================================
 
 
@@ -79,11 +85,7 @@ use App\Http\Controllers\AuthController;
 
         Route::delete('/led/schedule/{id}', [AdminController::class, 'deleteSchedule']); // Eliminar programación
 
-        Route::get('usuarios/familiares', [AdminController::class, 'listarFamiliares']);
-
         Route::delete('usuarios/eliminar/{id}', [AdminController    ::class, 'eliminarUsuario']);
-
-
 
     });
 

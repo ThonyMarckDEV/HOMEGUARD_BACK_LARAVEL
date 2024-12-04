@@ -22,6 +22,7 @@ use App\Services\TwilioService;  // Asegúrate de importar el servicio TwilioSer
 use Carbon\Carbon;
 use App\Models\Auditoria;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use DB;
 
 class AdminController extends Controller
 {
@@ -626,14 +627,6 @@ class AdminController extends Controller
             return response()->json($imagenes);
         }
 
-         // Listar usuarios con el rol 'familiar'
-        public function listarFamiliares()
-        {
-            $familiares = Usuario::where('rol', 'familiar')->get();
-
-            return response()->json($familiares);
-        }
-
         // Eliminar un usuario
         public function eliminarUsuario($id)
         {
@@ -709,6 +702,51 @@ class AdminController extends Controller
         {
             $cantidad = Led::count();
             return response()->json(['cantidad' => $cantidad]);
+        }
+
+        public function listarAuditoria(Request $request)
+        {
+            // Inicializa la consulta de auditorías
+            $query = Auditoria::query();
+
+            // Filtrar por idUsuario si es proporcionado y no está vacío
+            if ($request->filled('idUsuario')) {
+                $query->where('auditoria.idUsuario', $request->idUsuario);
+            }
+
+            // Filtrar solo los usuarios con rol "familiar"
+            $query->join('usuarios', 'auditoria.idUsuario', '=', 'usuarios.idUsuario')
+                ->where('usuarios.rol', 'familiar');
+
+            // Seleccionar las columnas requeridas
+            $auditorias = $query->select(
+                                'auditoria.id',
+                                'auditoria.descripcion',
+                                'auditoria.fecha_hora',
+                                DB::raw("CONCAT(usuarios.nombres, ' ', usuarios.apellidos) as nombre_completo")
+                            )
+                            ->get();
+
+            // Retornar los resultados como JSON
+            return response()->json($auditorias);
+        }
+
+
+        public function listarFamiliaresAuditoria()
+        {
+            $familiares = Usuario::where('rol', 'familiar')
+                ->select('idUsuario as id', 'nombres', 'apellidos')
+                ->get();
+        
+            return response()->json($familiares);
+        }
+
+        // Listar usuarios con el rol 'familiar'
+        public function listarFamiliares()
+        {
+            $familiares = Usuario::where('rol', 'familiar')->get();
+
+            return response()->json($familiares);
         }
 
 }

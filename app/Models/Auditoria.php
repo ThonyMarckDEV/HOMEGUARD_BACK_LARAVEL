@@ -9,6 +9,7 @@ class Auditoria extends Model
 {
     use HasFactory;
 
+    protected $primaryKey = 'id'; 
     protected $fillable = ['idUsuario', 'descripcion', 'fecha_hora'];
     
     protected $table = 'auditoria';  // Asegúrate de que coincida con el nombre de la tabla
@@ -23,4 +24,6 @@ class Auditoria extends Model
     {
         return $this->belongsTo(Usuario::class, 'idUsuario');
     }
+
+    
 }

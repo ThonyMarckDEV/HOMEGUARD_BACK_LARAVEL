@@ -48,4 +48,10 @@ class Usuario extends Authenticatable implements JWTSubject
         return $this->hasOne(ActividadUsuario::class, 'idUsuario'); // Cambiado a ActividadUsuario
     }
 
+      // Relación con el modelo Auditoria
+      public function auditorias()
+      {
+          return $this->hasMany(Auditoria::class, 'idUsuario');
+      }
+
 }
