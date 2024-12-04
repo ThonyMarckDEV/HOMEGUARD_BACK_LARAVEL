@@ -60,4 +60,19 @@ class AuditoriaController extends Controller
         ]);
     }
 
+
+    // AuditoriaController.php
+    public static function auditoriaAccesoStream($idUsuario)
+    {
+         // Descripción del evento
+         $descripcion = 'Ingreso a Monitorear Camara';
+ 
+         // Registrar la auditoría
+         Auditoria::create([
+             'idUsuario' => $idUsuario,  // El ID del usuario que realizó la acción
+             'descripcion' => "$descripcion",  // Descripción del evento
+             'fecha_hora' => Carbon::now(),  // Fecha y hora actual
+         ]);
+    }
+
 }

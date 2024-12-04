@@ -63,13 +63,19 @@ class AdminController extends Controller
         if (Storage::disk('local')->exists($file)) {
             // Leemos el contenido del archivo
             $link = Storage::disk('local')->get($file);
-
+    
+            // Obtener el idUsuario del token JWT
+            $user = JWTAuth::parseToken()->authenticate();
+            $idUsuario = $user->idUsuario;  // Suponiendo que tu modelo de usuario tiene idUsuario
+    
+            AuditoriaController::auditoriaAccesoStream($idUsuario);
+    
             // Respondemos con el enlace
             return response()->json([
                 'link' => $link
             ]);
         }
-
+    
         // Si el archivo no existe, respondemos con un error
         return response()->json([
             'message' => 'No se encontró el enlace.'
